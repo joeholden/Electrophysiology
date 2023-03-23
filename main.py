@@ -16,7 +16,7 @@ for file in os.listdir(folder_path):
 
 
 # Fix the bug that the y axis is formatted from a single sweep not all of them.
-def e_phys_plot(f, x_limits, stim, clamp, sweep_range=(0, None), color_scheme='mono', color_range=(0.4, 1)):
+def e_phys_plot(f, x_limits, sweep_range=(0, None), color_scheme='mono', color_range=(0.4, 1)):
     """f accepts an integer value corresponding to the filelocation in abf_files
     x_limits sets the range of x values you want to plot
     stim accepts 'light' or 'current'
@@ -66,6 +66,7 @@ def e_phys_plot(f, x_limits, stim, clamp, sweep_range=(0, None), color_scheme='m
     lower_y_lim = 1.01 * min_y
 
     plt.ylim(lower_y_lim, upper_y_lim)
+    # plt.ylim(-25, 25)
     plt.xlim(x_lower, x_upper)
     plt.xlabel(abf.sweepLabelX, fontsize=17)
     plt.ylabel(abf.sweepLabelY, fontsize=17)
@@ -78,4 +79,4 @@ def e_phys_plot(f, x_limits, stim, clamp, sweep_range=(0, None), color_scheme='m
 
 print(abf_files[0].headerText)
 print(abf_files[0].protocol)
-e_phys_plot(3, (0, 3), color_scheme='multi', stim='light', clamp='i')
+e_phys_plot(9, (0.5, 2.5), color_scheme='multi')
