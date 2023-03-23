@@ -6,7 +6,7 @@ import numpy as np
 
 abf_files = []
 file_names_text = []
-folder_path = 'C:/Users/joema/PycharmProjects/abf scratch/abf files/rgc/'
+folder_path = "E:/astro patch ly/"
 
 for file in os.listdir(folder_path):
     abf = pyabf.ABF(folder_path + file)
@@ -29,7 +29,7 @@ def e_phys_plot(f, x_limits, stim, clamp, sweep_range=(0, None), color_scheme='m
 
     # Inputs assigned
     x_lower, x_upper = x_limits
-    color_range_lower, color_range_upper= color_range
+    color_range_lower, color_range_upper = color_range
     first_sweep, last_sweep = sweep_range
     abf = abf_files[f]
     first_sweep, last_sweep = sweep_range
@@ -67,18 +67,15 @@ def e_phys_plot(f, x_limits, stim, clamp, sweep_range=(0, None), color_scheme='m
 
     plt.ylim(lower_y_lim, upper_y_lim)
     plt.xlim(x_lower, x_upper)
-    plt.xlabel('time (ms)', fontsize=17)
-    if clamp == 'i':
-        plt.ylabel('Voltage (mv)', fontsize=17)
-    else:
-        plt.ylabel('Current (units?)', fontsize=17)
+    plt.xlabel(abf.sweepLabelX, fontsize=17)
+    plt.ylabel(abf.sweepLabelY, fontsize=17)
 
-    if stim == 'light':
-        plt.title('Light Stimulation Protocol', fontsize=20)
-    else:
-        plt.title('Current Stimulation Protocol', fontsize=20)
+
+    plt.title(f'{abf.abfID} _ {abf.protocol}', fontsize=20)
+
     plt.show()
 
 
-e_phys_plot(9, (0, 7.5), color_scheme='multi', stim='light', clamp='i')
-
+print(abf_files[0].headerText)
+print(abf_files[0].protocol)
+e_phys_plot(3, (0, 3), color_scheme='multi', stim='light', clamp='i')
