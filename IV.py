@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import statistics as stats
 from pathlib import Path
+import pandas as pd
 
-
+excel_save_path = ""
 n = 4
 abf_path = f"abf_dir/2353100{n}.abf"
 abf = pyabf.ABF(abf_path)
@@ -33,3 +34,9 @@ plt.title(f"Current Voltage Diagram: {Path(abf_path).stem}", fontsize=17)
 plt.ylabel('Current (pA)')
 plt.xlabel('Voltage (mV)')
 plt.show()
+
+data = pd.DataFrame(pd.Series(voltages))
+data = pd.concat([data, pd.Series(currents)], axis=1)
+data.columns = ['Voltage', 'Current']
+data.to_excel(excel_save_path)
+print(data.head)
