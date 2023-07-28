@@ -1,3 +1,4 @@
+import pathlib
 import pyabf
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -6,21 +7,25 @@ import numpy as np
 import statistics as stats
 import pandas as pd
 import os
+from datetime import datetime
+import glob
 
 
-path = "C:/Users/Acer/Desktop/2023-07-26 great patch day/ABF/23726020.abf"
-
-
-def show_trace(abf_file_path, trace_number=0, color='#7852A9', channel=1, smooth=0, x_override=None):
+def show_trace(abf_file_path, path_to_save_fig, trace_number=0, color='#7852A9', channel=1, smooth=0, x_override=None,
+               show_legend=True, save_fig=True, display_fig=True):
     """
     Plots a single trace of an .abf file
-    
+
     :param abf_file_path: path to single abf file
+    :param path_to_save_fig: root path to save the figure
     :param trace_number: which sweep do you want to plot
     :param color: accepts hex or written color for plot trace. Default is purple
     :param channel: which channel is to be plotted? 0 or 1
     :param smooth: Do you want to smooth the plot? 0 No, 1 Yes, 2 Yes and display smoothed and un-smoothed data].
     :param x_override: Provide your own x_limits. Accepts a list [x_lower, x_upper]
+    :param show_legend: Boolean
+    :param save_fig: Boolean
+    :param display_fig: Boolean
     :return:
     """
     protocol_times = {
@@ -28,7 +33,7 @@ def show_trace(abf_file_path, trace_number=0, color='#7852A9', channel=1, smooth
         'AstroVoltClamp': [0.02, 0.14],
         'LightStimVoltClamp': [0.5, 2.7],
     }
-    abf = pyabf.ABF(path)
+    abf = pyabf.ABF(abf_file_path)
     try:
         abf.setSweep(trace_number, channel=channel)
     except ValueError:
@@ -46,7 +51,7 @@ def show_trace(abf_file_path, trace_number=0, color='#7852A9', channel=1, smooth
         plt.plot(abf.sweepX, abf.sweepY, color=color, label=f'Sweep {trace_number}')
         plt.plot(abf.sweepX, savgol_filter(abf.sweepY, 300, 3), color='black')   # window size 300, polynomial order 3)
 
-    if x_override == None:
+    if x_override is None:
         try:
             plt.xlim(protocol_times[abf.protocol][0],
                      protocol_times[abf.protocol][1])
@@ -69,18 +74,31 @@ def show_trace(abf_file_path, trace_number=0, color='#7852A9', channel=1, smooth
 
     plt.xlabel(f'Time ({abf.sweepUnitsX})', fontsize=15)
     plt.title(f'{abf.protocol}\n{Path(abf_file_path).stem}', fontsize=17)
-    plt.legend()
-    plt.show()
+    if show_legend:
+        plt.legend()
+    if save_fig:
+        plt.savefig(os.path.join(path_to_save_fig, pathlib.Path(abf_file_path).stem + f'_trace{trace_number}.png'))
+    if display_fig:
+        plt.show()
+    try:
+        plt.close()
+    except Exception as e:
+        print(e)
 
 
-def show_traces(abf_file_path, channel=1, smooth=0, x_override=None):
+def show_traces(abf_file_path, path_to_save_fig, channel=1, smooth=0, x_override=None, show_legend=True,
+                save_fig=True, display_fig=True,):
     """
     Plots All traces of an .abf file
 
     :param abf_file_path: path to single abf file
+    :param path_to_save_fig: Root path to save the figure
     :param channel: which channel is to be plotted? 0 or 1
     :param smooth: Do you want to smooth the plot? 0 No, 1 Yes, 2 Yes and display smoothed and un-smoothed data].
     :param x_override: Provide your own x_limits. Accepts a list [x_lower, x_upper]
+    :param show_legend: Boolean
+    :param save_fig: Boolean
+    :param display_fig: Boolean
     :return:
     """
     protocol_times = {
@@ -88,7 +106,7 @@ def show_traces(abf_file_path, channel=1, smooth=0, x_override=None):
         'AstroVoltClamp': [0.02, 0.14],
         'LightStimVoltClamp': [0.5, 2.7],
     }
-    abf = pyabf.ABF(path)
+    abf = pyabf.ABF(abf_file_path)
     colors = plt.cm.Spectral(np.linspace(0.4, 1, abf.sweepCount))
 
     # plot traces
@@ -135,12 +153,21 @@ def show_traces(abf_file_path, channel=1, smooth=0, x_override=None):
 
     plt.xlabel(f'Time ({abf.sweepUnitsX})', fontsize=15)
     plt.title(f'{abf.protocol}\n{Path(abf_file_path).stem}', fontsize=17)
-    plt.legend()
-    plt.show()
+    if show_legend:
+        plt.legend()
+
+    if save_fig:
+        plt.savefig(os.path.join(path_to_save_fig, pathlib.Path(abf_file_path).stem + '_all_traces.png'))
+    if display_fig:
+        plt.show()
+    try:
+        plt.close()
+    except Exception as e:
+        print(e)
 
 
 def iv_curve(excel_save_path, png_save_path, abf_path, mean_or_abs_max='mean', save_fig=True, plot_linear=False,
-             save_data=True, print_data=False):
+             save_data=True, print_data=False, display_fig=True):
     """
     Plots current voltage diagram for a single abf file
 
@@ -153,6 +180,7 @@ def iv_curve(excel_save_path, png_save_path, abf_path, mean_or_abs_max='mean', s
     :param plot_linear: Boolean value if you want to plot a linear line on the plot for rectification reference
     :param save_data: Boolean to save Excel data points
     :param print_data: Boolean to display the Excel data points in console
+    :param display_fig: Boolean
     :return:
     """
 
@@ -208,7 +236,14 @@ def iv_curve(excel_save_path, png_save_path, abf_path, mean_or_abs_max='mean', s
     plt.xlabel('Voltage (mV)', fontsize=15)
     if save_fig:
         plt.savefig(os.path.join(png_save_path, f'{abf.abfID} _ {abf.protocol}.png'))
-    plt.show()
+
+    if display_fig:
+        plt.show()
+
+    try:
+        plt.close()
+    except Exception as e:
+        print(e)
 
     if save_data:
         data = pd.DataFrame(pd.Series(voltages))
@@ -219,8 +254,32 @@ def iv_curve(excel_save_path, png_save_path, abf_path, mean_or_abs_max='mean', s
             print(data.head)
 
 
-iv_curve(plot_linear=True,
-         excel_save_path="C:/Users/Acer/Desktop/patching astrocytes/Excel IV plots/",
-         png_save_path="C:/Users/Acer/Desktop/patching astrocytes/IV PNG/",
-         abf_path="C:/Users/Acer/Desktop/2023-07-20/ABF/23720012.abf",
-         )
+def patch_log(abf_directory_path, excel_save_path):
+    """
+    :param abf_directory_path: Path to the directory containing .abf files
+    :param excel_save_path: path to Excel directory to save the file
+    :return:
+    """
+    abf_filepaths = glob.glob(os.path.join(abf_directory_path, "*.abf"))
+    today_str_date = datetime.today().strftime('%Y-%m-%d')
+    protocol_list = []
+    sweep_count_list = []
+    creation_times = []
+
+    for abf_path in abf_filepaths:
+        file_creation_time = datetime.fromtimestamp(os.path.getmtime(abf_path)).strftime('%H:%M:%S')
+        abf_object = pyabf.ABF(abf_path)
+        protocol = abf_object.protocol
+        sweeps = abf_object.sweepCount
+        protocol_list.append(protocol)
+        sweep_count_list.append(sweeps)
+        creation_times.append(file_creation_time)
+
+    protocol_list = pd.Series(protocol_list)
+    sweep_count_list = pd.Series(sweep_count_list)
+    filenames = pd.Series([os.path.basename(i) for i in abf_filepaths])
+    creation_times = pd.Series(creation_times)
+
+    df = pd.concat([filenames, protocol_list, sweep_count_list, creation_times], axis=1)
+    df.columns = ['Filename', 'Protocol', 'Sweep Count', 'Time']
+    df.to_excel(os.path.join(excel_save_path, f'Patch Log_Ran_On_{today_str_date}.xlsx'))
